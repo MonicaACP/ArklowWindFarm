@@ -1,49 +1,359 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wind Farm Data</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-body { margin: 0; padding: 0; }
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
-</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wind Farm Data Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        #map {
+            position: absolute;
+            top: 130px;
+            bottom: 0;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+
+        .nav {
+            background: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: #f0f0f0;
+            color: #764ba2;
+        }
+
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 999;
+        }
+
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .legend {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 250px;
+            position: absolute;
+            bottom: 200px;
+            left: 20px;
+            z-index: 999;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        .popup-content {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .popup-content b {
+            color: #667eea;
+        }
+
+        .popup-row {
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .popup-row:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .info-box, .legend {
+                max-width: calc(100% - 30px);
+                left: 10px;
+            }
+
+            .nav {
+                gap: 10px;
+            }
+
+            .nav a {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-<div id="map"></div>
-<script>
-// Initialize map
-var map = L.map('map').setView([53, -8], 7); // Ireland center
+    <div class="header">
+        <h1>🌬️ Arklowwind Farm - Planning Data</h1>
+        <p>Interactive wind farm data viewer</p>
+    </div>
 
-// Add base layer
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-attribution: '© OpenStreetMap contributors',
-maxZoom: 19
-}).addTo(map);
+    <div class="nav">
+        <a href="index.html" class="nav-link active">📍 GeoJSON Map</a>
+        <a href="instant-app.html" class="nav-link">🗂️ Instant App</a>
+    </div>
 
-// Load your GeoJSON
-fetch('sample_map.geojson')
-.then(response => response.json())
-.then(data => {
-L.geoJSON(data, {
-style: {
-color: '#3388ff',
-weight: 2,
-opacity: 0.8,
-fillOpacity: 0.5
-},
-onEachFeature: function(feature, layer) {
-// Create popup with data
-let popupContent = '<b>Wind Farm Data</b><br>';
-for (let key in feature.properties) {
-popupContent += `<b>${key}:</b> ${feature.properties[key]}<br>`;
-}
-layer.bindPopup(popupContent);
-}
-}).addTo(map);
-});
-</script>
+    <div id="map"></div>
+
+    <div class="legend">
+        <h4>Legend</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #3388ff;"></div>
+            <span>Wind Farm Location</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #ff7800;"></div>
+            <span>Proposed Site</span>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h3>ℹ️ How to Use</h3>
+        <p>
+            • <b>Zoom:</b> Scroll or pinch<br>
+            • <b>Pan:</b> Click & drag<br>
+            • <b>Click markers:</b> View details<br>
+            • <b>View only:</b> No editing
+        </p>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - EDIT THESE SETTINGS
+        // ============================================
+
+        // Your GeoJSON file name (must be in same folder as this HTML)
+        const GEOJSON_FILE = 'windfarm.geojson';
+
+        // Map center (latitude, longitude) - Ireland center
+        const MAP_CENTER = [53.41, -8.24];
+
+        // Initial zoom level
+        const INITIAL_ZOOM = 7;
+
+        // Color for wind farm features
+        const FEATURE_COLOR = '#3388ff';
+        const FEATURE_WEIGHT = 2;
+        const FEATURE_OPACITY = 0.8;
+        const FEATURE_FILL_OPACITY = 0.5;
+
+        // ============================================
+        // MAP INITIALIZATION
+        // ============================================
+
+        // Create map
+        const map = L.map('map').setView(MAP_CENTER, INITIAL_ZOOM);
+
+        // Add OpenStreetMap base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+            minZoom: 5
+        }).addTo(map);
+
+        // Add satellite layer option
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri',
+            maxZoom: 19
+        });
+
+        // Layer control
+        L.control.layers(
+            {
+                'Map': map._baseLayers[Object.keys(map._baseLayers)[0]],
+                'Satellite': satelliteLayer
+            }
+        ).addTo(map);
+
+        // ============================================
+        // LOAD AND DISPLAY GEOJSON
+        // ============================================
+
+        fetch(GEOJSON_FILE)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Could not load ${GEOJSON_FILE}. Make sure it's in the same folder as this HTML file.`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('✓ GeoJSON loaded successfully');
+                
+                // Add GeoJSON layer
+                const geoJsonLayer = L.geoJSON(data, {
+                    style: function(feature) {
+                        return {
+                            color: FEATURE_COLOR,
+                            weight: FEATURE_WEIGHT,
+                            opacity: FEATURE_OPACITY,
+                            fillOpacity: FEATURE_FILL_OPACITY
+                        };
+                    },
+                    
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 6,
+                            fillColor: FEATURE_COLOR,
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    
+                    onEachFeature: function(feature, layer) {
+                        // Build popup content from properties
+                        let popupHTML = '<div class="popup-content">';
+                        
+                        if (feature.properties) {
+                            // Show all properties in a formatted way
+                            for (let key in feature.properties) {
+                                const value = feature.properties[key];
+                                // Format the key (remove underscores, capitalize)
+                                const formattedKey = key
+                                    .replace(/_/g, ' ')
+                                    .replace(/\b\w/g, l => l.toUpperCase());
+                                
+                                popupHTML += `<div class="popup-row"><b>${formattedKey}:</b> ${value}</div>`;
+                            }
+                        }
+                        
+                        popupHTML += '</div>';
+                        layer.bindPopup(popupHTML);
+                        
+                        // Show info on hover (optional)
+                        layer.on('mouseover', function() {
+                            this.setStyle({
+                                weight: 3,
+                                opacity: 1
+                            });
+                        });
+                        
+                        layer.on('mouseout', function() {
+                            this.setStyle({
+                                weight: FEATURE_WEIGHT,
+                                opacity: FEATURE_OPACITY
+                            });
+                        });
+                    }
+                }).addTo(map);
+                
+                // Fit map to show all features
+                const bounds = geoJsonLayer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            })
+            .catch(error => {
+                console.error('✗ Error loading GeoJSON:', error);
+                alert('⚠️ Error: Could not load ' + GEOJSON_FILE + '\n\nMake sure:\n1. File name is correct\n2. File is in same folder as this HTML\n3. File is valid GeoJSON format');
+            });
+
+        // ============================================
+        // ADD SCALE AND ZOOM CONTROLS
+        // ============================================
+
+        L.control.scale().addTo(map);
+        L.control.zoom().addTo(map);
+
+        // Set active nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+
+        console.log('✓ Wind Farm Map loaded successfully');
+    </script>
 </body>
 </html>

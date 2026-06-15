@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arklowwind Farm - Instant App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+
+        .nav {
+            background: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: #f0f0f0;
+            color: #764ba2;
+        }
+
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        #app-container {
+            position: absolute;
+            top: 130px;
+            bottom: 0;
+            width: 100%;
+            z-index: 1;
+        }
+
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-banner {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .info-banner.show {
+            display: block;
+        }
+
+        .info-banner p {
+            margin: 0;
+            color: #1976d2;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .nav {
+                gap: 10px;
+            }
+
+            .nav a {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌬️ Arklowwind Farm - Planning Data</h1>
+        <p>Interactive ArcGIS Portal Application</p>
+    </div>
+
+    <div class="nav">
+        <a href="index.html" class="nav-link">📍 GeoJSON Map</a>
+        <a href="instant-app.html" class="nav-link active">🗂️ Instant App</a>
+    </div>
+
+    <div class="info-banner show">
+        <p>⚠️ Loading ArcGIS Portal app. If it doesn't appear below, your portal may not allow public embedding. <a href="https://azgis.pleanala.ie/portal/apps/instant/basic/index.html?appid=a92659686ddd4776a5a63425e113a998" target="_blank" style="color: #1976d2; font-weight: bold;">Click here to open in new window</a></p>
+    </div>
+
+    <div id="app-container">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading Instant App...</p>
+        </div>
+        <iframe 
+            id="instant-app-frame"
+            src="https://azgis.pleanala.ie/portal/apps/instant/basic/index.html?appid=a92659686ddd4776a5a63425e113a998"
+            allowfullscreen="">
+        </iframe>
+    </div>
+
+    <script>
+        // Fade out loading spinner when iframe loads
+        document.getElementById('instant-app-frame').onload = function() {
+            const loading = document.querySelector('.loading');
+            if (loading) {
+                loading.style.display = 'none';
+            }
+        };
+
+        // Set active nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
